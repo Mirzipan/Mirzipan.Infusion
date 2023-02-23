@@ -1,0 +1,24 @@
+{
+  "name": "net.mirzipan.infusion",
+  "displayName": "Mirzipan Infusion",
+  "version": "1.0.0",
+  "unity": "2021.3",
+  "description": "Basic dependency injection",
+  "author": {
+	 "name": "Mirzipan"
+  },
+  "keywords": [ 
+	 "package",
+	 "unity",
+     "mirzipan",
+     "extensions",
+	 "utils",
+     "framework",
+     "dependency",
+     "injection",
+     "ioc",
+     "di"
+  ],
+  "dependencies": {
+  }
+}
