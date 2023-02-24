@@ -43,30 +43,30 @@ namespace Mirzipan.Infusion
 
         #region Queries
 
-        public void Inject(object obj)
+        public void Inject(object instance)
         {
-            if (obj == null)
+            if (instance == null)
             {
                 return;
             }
 
-            var objType = obj.GetType();
+            var objType = instance.GetType();
             var info = GetTypeInfo(objType);
 
             foreach (var member in info.Members)
             {
-                member.Setter(obj, Resolve(member.MemberType, member.InjectName, false, null));
+                member.Setter(instance, Resolve(member.MemberType, member.InjectName, false, null));
             }
         }
 
-        public T Resolve<T>(string name = null, bool requireInstance = false, object[] args = null) where T : class
+        public T Resolve<T>(string identifier = null, bool requireInstance = false, object[] args = null) where T : class
         {
-            return (T)Resolve(typeof(T), name, requireInstance, args);
+            return (T)Resolve(typeof(T), identifier, requireInstance, args);
         }
 
-        public object Resolve(Type baseType, string name = null, bool requireInstance = false, object[] constructorArgs = null)
+        public object Resolve(Type baseType, string identifier = null, bool requireInstance = false, object[] constructorArgs = null)
         {
-            object item = _instances[baseType, name];
+            object item = _instances[baseType, identifier];
             if (item != null)
             {
                 return item;
@@ -77,10 +77,10 @@ namespace Mirzipan.Infusion
                 return null;
             }
 
-            Type namedMapping = _mappings[baseType, name];
+            Type namedMapping = _mappings[baseType, identifier];
             if (namedMapping == null)
             {
-                return _parent?.Resolve(baseType, name, requireInstance, constructorArgs);
+                return _parent?.Resolve(baseType, identifier, requireInstance, constructorArgs);
             }
 
             return Instantiate(namedMapping, constructorArgs);
@@ -101,6 +101,21 @@ namespace Mirzipan.Infusion
             return null;
         }
 
+        public TBase ResolveRelation<TFor, TBase>(object[] args = null)
+        {
+            return (TBase)ResolveRelation(typeof(TFor), typeof(TBase), args);
+        }
+
+        public object ResolveRelation(Type forType, Type baseType, object[] args = null)
+        {
+            var type = _relationships[forType, baseType];
+            return type != null ? Instantiate(type, args) : null;
+        }
+
+        #endregion Queries
+
+        #region Bind / Unbind
+
         public void Bind<T>(T instance) where T : class
         {
             Bind(instance, null, true);
@@ -111,14 +126,14 @@ namespace Mirzipan.Infusion
             Bind(instance, null, injectNow);
         }
 
-        public void Bind<T>(T instance, string name, bool injectNow = true) where T : class
+        public void Bind<T>(T instance, string identifier, bool injectNow = true) where T : class
         {
-            Bind(typeof(T), instance, name, injectNow);
+            Bind(typeof(T), instance, identifier, injectNow);
         }
 
-        public void Bind(Type baseType, object instance, string name = null, bool injectNow = true)
+        public void Bind(Type baseType, object instance, string identifier = null, bool injectNow = true)
         {
-            _instances[baseType, name] = instance;
+            _instances[baseType, identifier] = instance;
 
             if (injectNow)
             {
@@ -136,20 +151,20 @@ namespace Mirzipan.Infusion
             BindWithInterfaces(instance, null, injectNow);
         }
 
-        public void BindWithInterfaces<T>(T instance, string name, bool injectNow = true) where T : class
+        public void BindWithInterfaces<T>(T instance, string identifier, bool injectNow = true) where T : class
         {
-            BindWithInterfaces(typeof(T), instance, name, injectNow);
+            BindWithInterfaces(typeof(T), instance, identifier, injectNow);
         }
 
-        public void BindWithInterfaces(Type baseType, object instance, string name = null, bool injectNow = true)
+        public void BindWithInterfaces(Type baseType, object instance, string identifier = null, bool injectNow = true)
         {
             var interfaces = baseType.GetInterfaces();
             foreach (var entry in interfaces)
             {
-                Bind(entry, instance, name);
+                Bind(entry, instance, identifier);
             }
 
-            _instances[baseType, name] = instance;
+            _instances[baseType, identifier] = instance;
 
             if (injectNow)
             {
@@ -157,7 +172,67 @@ namespace Mirzipan.Infusion
             }
         }
 
-        #endregion Queries
+        public void Bind<TFor, TBase, TConcrete>()
+        {
+            _relationships[typeof(TFor), typeof(TBase)] = typeof(TConcrete);
+        }
+
+        public void Bind(Type forType, Type baseType, Type concreteType)
+        {
+            _relationships[forType, baseType] = concreteType;
+        }
+
+        public void Unbind<T>(string identifier)
+        {
+            Unbind(typeof(T), identifier);
+        }
+
+        public void Unbind(Type forType, string identifier)
+        {
+            _instances.Remove(new TypeInstanceId(forType, identifier));
+        }
+
+        public void Unbind<TFor, TBase>()
+        {
+            Unbind(typeof(TFor), typeof(TBase));
+        }
+
+        public void Unbind(Type forType, Type baseType)
+        {
+            _relationships.Remove(new TypeMapping(forType, baseType));
+        }
+
+        public void UnbindInstances()
+        {
+            _instances.Clear();
+        }
+
+        public void UnbindRelationship()
+        {
+            _relationships.Clear();
+        }
+
+        public bool HasBinding<T>()
+        {
+            return HasBinding(typeof(T));
+        }
+
+        public bool HasBinding<T>(string identifier)
+        {
+            return HasBinding(typeof(T), identifier);
+        }
+
+        public bool HasBinding(Type type)
+        {
+            return HasBinding(type, null);
+        }
+
+        public bool HasBinding(Type type, string identifier)
+        {
+            return _instances.ContainsKey(new TypeInstanceId(type, identifier));
+        }
+
+        #endregion Bind / Unbind
 
         #region Private
 
