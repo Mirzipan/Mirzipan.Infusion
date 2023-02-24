@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Mirzipan.Extensions.Collections;
 using Mirzipan.Infusion.Collections;
 using Mirzipan.Infusion.Meta;
@@ -59,6 +60,14 @@ namespace Mirzipan.Infusion
             }
         }
 
+        public void InjectAll()
+        {
+            foreach (var entry in _instances)
+            {
+                Inject(entry);
+            }
+        }
+
         public T Resolve<T>(string identifier = null, bool requireInstance = false, object[] args = null) where T : class
         {
             return (T)Resolve(typeof(T), identifier, requireInstance, args);
@@ -84,6 +93,43 @@ namespace Mirzipan.Infusion
             }
 
             return Instantiate(namedMapping, constructorArgs);
+        }
+
+        public IEnumerable<T> ResolveAll<T>()
+        {
+            foreach (var entry in ResolveAll(typeof(T)))
+            {
+                yield return (T)entry;
+            }
+        }
+
+        public IEnumerable<object> ResolveAll(Type type)
+        {
+            foreach (var entry in _instances)
+            {
+                if (entry.Key.Type == type && entry.Key.Name.NotNullOrEmpty())
+                {
+                    yield return entry.Value;
+                }
+            }
+
+            foreach (var entry in _mappings)
+            {
+                if (entry.Key.Name.IsNullOrEmpty())
+                {
+                    continue;
+                }
+
+                bool isAssignableFrom = type.IsAssignableFrom(entry.Key.Type);
+                if (!isAssignableFrom)
+                {
+                    continue;
+                }
+
+                var instance = Activator.CreateInstance(entry.Value);
+                Inject(instance);
+                yield return instance;
+            }
         }
 
         public T Instantiate<T>(object[] constructorArgs = null) => (T)Instantiate(typeof(T), constructorArgs);

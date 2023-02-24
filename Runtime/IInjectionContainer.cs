@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Mirzipan.Infusion.Collections;
 
 namespace Mirzipan.Infusion
@@ -34,5 +35,8 @@ namespace Mirzipan.Infusion
         bool HasBinding<T>(string identifier);
         bool HasBinding(Type type);
         bool HasBinding(Type type, string identifier);
+        void InjectAll();
+        IEnumerable<T> ResolveAll<T>();
+        IEnumerable<object> ResolveAll(Type type);
     }
 }
