@@ -9,26 +9,14 @@ namespace Mirzipan.Infusion
     {
         private IInjectionContainer _parent;
 
-        private TypeRelationCollection _relationships = new TypeRelationCollection();
-        private TypeInstanceCollection _instances = new TypeInstanceCollection();
-        private TypeMappingCollection _mappings = new TypeMappingCollection();
+        private readonly TypeRelationCollection _relationships = new TypeRelationCollection();
+        private readonly TypeInstanceCollection _instances = new TypeInstanceCollection();
+        private readonly TypeMappingCollection _mappings = new TypeMappingCollection();
 
-        public TypeRelationCollection Relationships
+        public IInjectionContainer Parent
         {
-            get => _relationships;
-            set => _relationships = value;
-        }
-
-        public TypeInstanceCollection Instances
-        {
-            get => _instances;
-            set => _instances = value;
-        }
-
-        public TypeMappingCollection Mappings
-        {
-            get => _mappings;
-            set => _mappings = value;
+            get => _parent;
+            set => _parent = value;
         }
 
         #region Lifecycle
@@ -42,8 +30,13 @@ namespace Mirzipan.Infusion
             _parent = parent;
         }
 
+        public IInjectionContainer CreateChildContainer() => new InjectionContainer(this);
+
         public void Dispose()
         {
+            _relationships.Clear();
+            _instances.Clear();
+            _mappings.Clear();
         }
 
         #endregion Lifecycle
@@ -73,27 +66,29 @@ namespace Mirzipan.Infusion
 
         public object Resolve(Type baseType, string name = null, bool requireInstance = false, object[] constructorArgs = null)
         {
-            object item = Instances[baseType, name];
+            object item = _instances[baseType, name];
             if (item != null)
             {
                 return item;
             }
 
-            if (requireInstance)
+            if (requireInstance && _parent == null)
             {
-                return _parent?.Instances[baseType, name];
+                return null;
             }
 
-            Type namedMapping = Mappings[baseType, name];
+            Type namedMapping = _mappings[baseType, name];
             if (namedMapping == null)
             {
-                return _parent?.Mappings[baseType, name];
+                return _parent?.Resolve(baseType, name, requireInstance, constructorArgs);
             }
 
-            return CreateInstance(namedMapping, constructorArgs);
+            return Instantiate(namedMapping, constructorArgs);
         }
 
-        public object CreateInstance(Type type, object[] constructorArgs = null)
+        public T Instantiate<T>(object[] constructorArgs = null) => (T)Instantiate(typeof(T), constructorArgs);
+
+        public object Instantiate(Type type, object[] constructorArgs = null)
         {
             if (!constructorArgs.IsNullOrEmpty())
             {
@@ -106,11 +101,67 @@ namespace Mirzipan.Infusion
             return null;
         }
 
+        public void Bind<T>(T instance) where T : class
+        {
+            Bind(instance, null, true);
+        }
+
+        public void Bind<T>(T instance, bool injectNow) where T : class
+        {
+            Bind(instance, null, injectNow);
+        }
+
+        public void Bind<T>(T instance, string name, bool injectNow = true) where T : class
+        {
+            Bind(typeof(T), instance, name, injectNow);
+        }
+
+        public void Bind(Type baseType, object instance, string name = null, bool injectNow = true)
+        {
+            _instances[baseType, name] = instance;
+
+            if (injectNow)
+            {
+                Inject(instance);
+            }
+        }
+
+        public void BindWithInterfaces<T>(T instance) where T : class
+        {
+            BindWithInterfaces(instance, true);
+        }
+
+        public void BindWithInterfaces<T>(T instance, bool injectNow) where T : class
+        {
+            BindWithInterfaces(instance, null, injectNow);
+        }
+
+        public void BindWithInterfaces<T>(T instance, string name, bool injectNow = true) where T : class
+        {
+            BindWithInterfaces(typeof(T), instance, name, injectNow);
+        }
+
+        public void BindWithInterfaces(Type baseType, object instance, string name = null, bool injectNow = true)
+        {
+            var interfaces = baseType.GetInterfaces();
+            foreach (var entry in interfaces)
+            {
+                Bind(entry, instance, name);
+            }
+
+            _instances[baseType, name] = instance;
+
+            if (injectNow)
+            {
+                Inject(instance);
+            }
+        }
+
         #endregion Queries
 
         #region Private
 
-        private TypeInjectionInfo GetTypeInfo(Type type)
+        private static TypeInjectionInfo GetTypeInfo(Type type)
         {
             InjectionIndexer.Instance.Index(type);
             InjectionIndexer.Instance.TryGetInfo(type, out var result);
