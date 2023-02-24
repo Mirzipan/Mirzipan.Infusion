@@ -218,6 +218,16 @@ namespace Mirzipan.Infusion
             }
         }
 
+        public void Bind<TBase, TConcrete>(string identifier = null)
+        {
+            _mappings[new TypeInstanceId(typeof(TBase), identifier)] = typeof(TConcrete);
+        }
+
+        public void Bind(Type baseType, Type concreteType, string identifier = null)
+        {
+            _mappings[new TypeInstanceId(baseType, identifier)] = concreteType;
+        }
+
         public void Bind<TFor, TBase, TConcrete>()
         {
             _relationships[typeof(TFor), typeof(TBase)] = typeof(TConcrete);
