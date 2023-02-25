@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.0.1] - 2023-02-25
+
+### Added
+- Creating a instance based on existing constructors, including constructor and instance injection
+
 ## [1.0.0] - 2023-02-24
 
 ### Added

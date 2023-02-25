@@ -259,12 +259,12 @@ namespace Mirzipan.Infusion
             _relationships[forType, baseType] = concreteType;
         }
 
-        public void Unbind<T>(string identifier)
+        public void Unbind<T>(string identifier = null)
         {
             Unbind(typeof(T), identifier);
         }
 
-        public void Unbind(Type forType, string identifier)
+        public void Unbind(Type forType, string identifier = null)
         {
             _instances.Remove(new TypeInstanceId(forType, identifier));
         }
