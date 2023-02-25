@@ -126,9 +126,7 @@ namespace Mirzipan.Infusion
                     continue;
                 }
 
-                var instance = Activator.CreateInstance(entry.Value);
-                Inject(instance);
-                yield return instance;
+                yield return InstantiateAndInject(entry.Value);
             }
         }
 
@@ -138,13 +136,36 @@ namespace Mirzipan.Infusion
         {
             if (!constructorArgs.IsNullOrEmpty())
             {
-                var result = Activator.CreateInstance(type, constructorArgs);
-                Inject(result);
-                return result;
+                return InstantiateAndInject(type, constructorArgs);
             }
 
-            // TODO: more type reflection
-            return null;
+            var info = GetTypeInfo(type);
+            var constructor = info.DefaultConstructor;
+            if (constructor == null)
+            {
+                return null;
+            }
+
+            if (constructor.Parameters.Length == 0)
+            {
+                return InstantiateAndInject(type);
+            }
+
+            int count = constructor.Parameters.Length;
+            var args = new object[count];
+            for (int i = 0; i < count; i++)
+            {
+                var parameter = constructor.Parameters[i];
+                if (parameter.Type.IsArray)
+                {
+                    args[i] = ResolveAll(parameter.Type);
+                    continue;
+                }
+
+                args[i] = Resolve(parameter.Type) ?? Resolve(parameter.Type, parameter.Name);
+            }
+
+            return InstantiateAndInject(type, args);
         }
 
         public TBase ResolveRelation<TFor, TBase>(object[] args = null)
@@ -296,6 +317,20 @@ namespace Mirzipan.Infusion
         {
             InjectionIndexer.Instance.Index(type);
             InjectionIndexer.Instance.TryGetInfo(type, out var result);
+            return result;
+        }
+
+        private object InstantiateAndInject(Type type)
+        {
+            var result = Activator.CreateInstance(type);
+            Inject(result);
+            return result;
+        }
+
+        private object InstantiateAndInject(Type type, object[] constructorArgs)
+        {
+            var result = Activator.CreateInstance(type, constructorArgs);
+            Inject(result);
             return result;
         }
 

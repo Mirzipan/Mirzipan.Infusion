@@ -7,14 +7,43 @@ namespace Mirzipan.Infusion.Meta
     public class TypeInjectionInfo
     {
         private static readonly Type InjectAttributeType = typeof(InjectAttribute);
-        
+
+        public readonly InjectableConstructorInfo[] Constructors;
         public readonly InjectableMemberInfo[] Members;
 
+        public readonly InjectableConstructorInfo DefaultConstructor;
+        
         public TypeInjectionInfo(Type type)
         {
-            var members = type.GetMembers();
-            var list = new List<InjectableMemberInfo>(members.Length);
+            Constructors = GetInjectableConstructors(type, out DefaultConstructor).ToArray();
+            Members = GetInjectableMembers(type).ToArray();
+        }
+
+        private static List<InjectableConstructorInfo> GetInjectableConstructors(Type type, out InjectableConstructorInfo @default)
+        {
+            @default = null;
+            var constructors = type.GetConstructors(BindingFlags.Public | BindingFlags.Instance);
+            var result = new List<InjectableConstructorInfo>(constructors.Length);
+
+            foreach (var constructor in constructors)
+            {
+                var info = new InjectableConstructorInfo(constructor.GetParameters());
+                if (@default == null || @default.Parameters.Length < info.Parameters.Length)
+                {
+                    @default = info;
+                }
+                
+                result.Add(info);
+            }
             
+            return result;
+        }
+        
+        private static List<InjectableMemberInfo> GetInjectableMembers(Type type)
+        {
+            var members = type.GetMembers();
+            var result = new List<InjectableMemberInfo>(members.Length);
+
             foreach (var member in members)
             {
                 var attribute = member.GetCustomAttribute<InjectAttribute>();
@@ -26,19 +55,19 @@ namespace Mirzipan.Infusion.Meta
                 var field = member as FieldInfo;
                 if (field != null)
                 {
-                    list.Add(new InjectableMemberInfo(field, attribute.Name));
+                    result.Add(new InjectableMemberInfo(field, attribute.Name));
                     continue;
                 }
 
                 var property = member as PropertyInfo;
                 if (property != null)
                 {
-                    list.Add(new InjectableMemberInfo(property, attribute.Name));
+                    result.Add(new InjectableMemberInfo(property, attribute.Name));
                     continue;
                 }
             }
 
-            Members = list.ToArray();
+            return result;
         }
     }
 }
