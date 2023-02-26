@@ -5,7 +5,7 @@ namespace Mirzipan.Infusion.Meta
 {
     public class InjectionIndexer
     {
-        public static InjectionIndexer Instance => new();
+        public static readonly InjectionIndexer Instance = new();
 
         private readonly Dictionary<Type, TypeInjectionInfo> _types = new();
 
