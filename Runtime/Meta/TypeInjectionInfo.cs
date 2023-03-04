@@ -41,7 +41,8 @@ namespace Mirzipan.Infusion.Meta
         
         private static List<InjectableMemberInfo> GetInjectableMembers(Type type)
         {
-            var members = type.GetMembers();
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+            var members = type.GetMembers(flags);
             var result = new List<InjectableMemberInfo>(members.Length);
 
             foreach (var member in members)
