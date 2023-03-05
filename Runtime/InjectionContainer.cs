@@ -208,37 +208,6 @@ namespace Mirzipan.Infusion
             }
         }
 
-        public void BindWithInterfaces<T>(T instance) where T : class
-        {
-            BindWithInterfaces(instance, true);
-        }
-
-        public void BindWithInterfaces<T>(T instance, bool injectNow) where T : class
-        {
-            BindWithInterfaces(instance, null, injectNow);
-        }
-
-        public void BindWithInterfaces<T>(T instance, string identifier, bool injectNow = true) where T : class
-        {
-            BindWithInterfaces(typeof(T), instance, identifier, injectNow);
-        }
-
-        public void BindWithInterfaces(Type baseType, object instance, string identifier = null, bool injectNow = true)
-        {
-            var interfaces = baseType.GetInterfaces();
-            foreach (var entry in interfaces)
-            {
-                Bind(entry, instance, identifier);
-            }
-
-            _instances[baseType, identifier] = instance;
-
-            if (injectNow)
-            {
-                Inject(instance);
-            }
-        }
-
         public void Bind<TBase, TConcrete>(string identifier = null)
         {
             _mappings[new TypeInstanceId(typeof(TBase), identifier)] = typeof(TConcrete);

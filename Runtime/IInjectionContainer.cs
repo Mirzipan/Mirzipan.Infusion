@@ -21,10 +21,6 @@ namespace Mirzipan.Infusion
         void Bind<T>(T instance, bool injectNow) where T : class;
         void Bind<T>(T instance, string identifier, bool injectNow = true) where T : class;
         void Bind(Type baseType, object instance, string identifier = null, bool injectNow = true);
-        void BindWithInterfaces<T>(T instance) where T : class;
-        void BindWithInterfaces<T>(T instance, bool injectNow) where T : class;
-        void BindWithInterfaces<T>(T instance, string identifier, bool injectNow = true) where T : class;
-        void BindWithInterfaces(Type baseType, object instance, string identifier = null, bool injectNow = true);
         void Bind<TFor, TBase, TConcrete>();
         void Bind(Type forType, Type baseType, Type concreteType);
         void Unbind<T>(string identifier = null);
