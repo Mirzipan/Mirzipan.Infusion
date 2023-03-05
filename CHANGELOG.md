@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.1.0] - 2023-03-05
+
+### Changed
+- all variants of BindWithInterfaces are now extensions methods
+
 ## [1.0.3] - 2023-03-04
 
 ### Added
