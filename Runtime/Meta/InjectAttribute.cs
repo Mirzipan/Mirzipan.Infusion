@@ -6,6 +6,7 @@ namespace Mirzipan.Infusion.Meta
     public class InjectAttribute: Attribute
     {
         public string Name { get; set; }
+        public bool RequireInstance { get; set; }
 
         public InjectAttribute()
         {
@@ -14,6 +15,12 @@ namespace Mirzipan.Infusion.Meta
         public InjectAttribute(string name)
         {
             Name = name;
+        }
+
+        public InjectAttribute(string name, bool requireInstance)
+        {
+            Name = name;
+            RequireInstance = requireInstance;
         }
     }
 }

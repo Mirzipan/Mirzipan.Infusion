@@ -2,7 +2,8 @@
     "name": "Mirzipan.Infusion",
     "rootNamespace": "",
     "references": [
-        "Mirzipan.Extensions"
+        "Mirzipan.Extensions",
+        "Mirzipan.Bibliotheca"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

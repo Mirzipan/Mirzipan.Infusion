@@ -56,14 +56,14 @@ namespace Mirzipan.Infusion.Meta
                 var field = member as FieldInfo;
                 if (field != null)
                 {
-                    result.Add(new InjectableMemberInfo(field, attribute.Name));
+                    result.Add(new InjectableMemberInfo(field, attribute.Name, attribute.RequireInstance));
                     continue;
                 }
 
                 var property = member as PropertyInfo;
                 if (property != null)
                 {
-                    result.Add(new InjectableMemberInfo(property, attribute.Name));
+                    result.Add(new InjectableMemberInfo(property, attribute.Name, attribute.RequireInstance));
                     continue;
                 }
             }
