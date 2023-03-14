@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.0.0-alpha.1] - 2023-03-14
+
+### Added
+- option to bind factory methods for instance resolution
+- children are now remembered within the container
+- container has a name
+
+### Changed
+- bibliotheca added as dependency
+- internally bindings are IResolver now
+
+### Removed
+- type relationship binding (might come back if proved necessary)
+
 ## [1.1.0] - 2023-03-05
 
 ### Changed

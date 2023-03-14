@@ -14,12 +14,25 @@ public class AClass
     private readonly BClass _injectableField;
     [Inject]
     private readonly CClass InjectableProperty { get; }
+    [Inject("my-favorite-bclass-instance", requireInstance = true)]
+    private readonly AStruct _injectableField;
 }
 ```
 
 Inject can use both, an unnamed instance or a named instance.
 
 ## Injection Container
+
+### Hierarchy
+
+```csharp
+string Name { get; }
+IInjectionContainer Parent { get; }
+IReadOnlyList<IInjectionContainer> Children { get; }
+IInjectionContainer CreateChild(string name);
+```
+Containers can exist in hierarchy. 
+If child container has no binding for what you are trying to resolve, it will try resolving the instance via parent.
 
 ### Inject
 
@@ -61,23 +74,18 @@ Returns a fresh instance of the Type and injects it.
 
 ### Bind
 
-```csharp
-void Bind<T>(T instance) where T : class
-void Bind<T>(T instance, bool injectNow) where T : class
-void Bind<T>(T instance, string identifier, bool injectNow = true) where T : class
-void Bind(Type baseType, object instance, string identifier = null, bool injectNow = true)
+```csharp        
+void Bind(object instance, string identified = null);
+void Bind<T>(T instance);
+void Bind<T>(T instance, bool injectNow);
+void Bind<T>(T instance, string identifier, bool injectNow = true);
+void Bind(Type baseType, object instance, string identifier = null, bool injectNow = true);
+void Bind<TBase, TConcrete>(string identifier = null) where TConcrete : TBase;
+void Bind(Type baseType, Type concreteType, string identifier = null);
+void Bind<T>(Func<T> factory, string identifier = null);
+void Bind(Type baseType, Func<object> factory, string identifier = null);
 ```
 Register a specific instance with the Type.
-* `indentifier` - optional identifier for the instance.
-* `injectNow` - optional, if true, this instance will be injected.
-
-```csharp
-void BindWithInterfaces<T>(T instance) where T : class
-void BindWithInterfaces<T>(T instance, bool injectNow) where T : class
-void BindWithInterfaces<T>(T instance, string identifier, bool injectNow = true) where T : class
-void BindWithInterfaces(Type baseType, object instance, string identifier = null, bool injectNow = true)
-```
-Register a specific instance with the Type and all interfaces it implements.
 * `indentifier` - optional identifier for the instance.
 * `injectNow` - optional, if true, this instance will be injected.
 
@@ -90,18 +98,11 @@ void Unbind(Type forType, string identifier = null)
 Unregisters the instance associated with the Type.
 * `indentifier` - optional identifier for the instance.
 
-```csharp
-void UnbindInstances()
-```
-Unregisters all registered instances.
-
 ### Has Bindings
 
 ```csharp
-bool HasBinding<T>()
-bool HasBinding<T>(string identifier)
-bool HasBinding(Type type)
-bool HasBinding(Type type, string identifier)
+bool HasBinding<T>(string identifier = null)
+bool HasBinding(Type type, string identifier = null)
 ```
 Returns true if there is an instance registered with the Type.
 * `indentifier` - optional identifier for the instance.
