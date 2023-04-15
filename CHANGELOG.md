@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.1.0-alpha.1] - 2023-04-15
+
+### Added
+- Inject can now be used on instance methods
+- Lazy resolver for when you don't have an instance at the time of adding a binding
+
+### Changed
+- Renamed most methods on container
+
 ## [2.0.0-alpha.1] - 2023-03-14
 
 ### Added

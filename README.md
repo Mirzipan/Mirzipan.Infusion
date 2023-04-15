@@ -16,6 +16,16 @@ public class AClass
     private readonly CClass InjectableProperty { get; }
     [Inject("my-favorite-bclass-instance", requireInstance = true)]
     private readonly AStruct _injectableField;
+    
+    [Inject]
+    private void Init()
+    {
+    }
+    
+    [Inject]
+    private void Init(CClass someCClass)
+    {
+    }
 }
 ```
 
@@ -75,15 +85,16 @@ Returns a fresh instance of the Type and injects it.
 ### Bind
 
 ```csharp        
-void Bind(object instance, string identified = null);
-void Bind<T>(T instance);
-void Bind<T>(T instance, bool injectNow);
-void Bind<T>(T instance, string identifier, bool injectNow = true);
-void Bind(Type baseType, object instance, string identifier = null, bool injectNow = true);
-void Bind<TBase, TConcrete>(string identifier = null) where TConcrete : TBase;
-void Bind(Type baseType, Type concreteType, string identifier = null);
-void Bind<T>(Func<T> factory, string identifier = null);
-void Bind(Type baseType, Func<object> factory, string identifier = null);
+void BindInstance(object instance, string identified = null);
+void BindInstance<T>(T instance);
+void BindInstance<T>(T instance, bool injectNow);
+void BindInstance<T>(T instance, string identifier, bool injectNow = true);
+void BindInstance(Type baseType, object instance, string identifier = null, bool injectNow = true);
+void BindLazy<T>(string identifier = null);
+void BindLazy(Type type, string identifier = null);
+void BindFactory<TBase, TConcrete>(string identifier = null) where TConcrete : TBase;
+void BindFactory(Type baseType, Type concreteType, string identifier = null);
+void BindFunction<T>(Func<T> factory, string identifier = null);
 ```
 Register a specific instance with the Type.
 * `indentifier` - optional identifier for the instance.

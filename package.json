@@ -1,7 +1,7 @@
 {
   "name": "net.mirzipan.infusion",
   "displayName": "Mirzipan Infusion",
-  "version": "2.0.0-alpha.1",
+  "version": "2.1.0-alpha.1",
   "unity": "2021.3",
   "description": "Basic dependency injection",
   "author": {
