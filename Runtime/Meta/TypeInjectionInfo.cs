@@ -10,6 +10,7 @@ namespace Mirzipan.Infusion.Meta
 
         public readonly InjectableConstructorInfo[] Constructors;
         public readonly InjectableMemberInfo[] Members;
+        public readonly InjectableMethodInfo[] Methods;
 
         public readonly InjectableConstructorInfo DefaultConstructor;
         
@@ -17,6 +18,7 @@ namespace Mirzipan.Infusion.Meta
         {
             Constructors = GetInjectableConstructors(type, out DefaultConstructor).ToArray();
             Members = GetInjectableMembers(type).ToArray();
+            Methods = GetInjectableMethods(type).ToArray();
         }
 
         private static List<InjectableConstructorInfo> GetInjectableConstructors(Type type, out InjectableConstructorInfo @default)
@@ -66,6 +68,26 @@ namespace Mirzipan.Infusion.Meta
                     result.Add(new InjectableMemberInfo(property, attribute.Name, attribute.RequireInstance));
                     continue;
                 }
+            }
+
+            return result;
+        }
+
+        private static List<InjectableMethodInfo> GetInjectableMethods(Type type)
+        {
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+            var methods = type.GetMethods(flags);
+            var result = new List<InjectableMethodInfo>(methods.Length);
+            
+            foreach (var method in methods)
+            {
+                var attribute = method.GetCustomAttribute<InjectAttribute>();
+                if (attribute == null)
+                {
+                    continue;
+                }
+
+                result.Add(new InjectableMethodInfo(method));
             }
 
             return result;

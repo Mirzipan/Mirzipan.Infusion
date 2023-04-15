@@ -2,7 +2,7 @@
 
 namespace Mirzipan.Infusion.Meta
 {
-    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Method)]
     public class InjectAttribute: Attribute
     {
         public string Name { get; set; }

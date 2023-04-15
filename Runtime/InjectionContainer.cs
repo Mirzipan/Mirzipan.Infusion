@@ -75,6 +75,11 @@ namespace Mirzipan.Infusion
             {
                 member.Setter(instance, Resolve(member.MemberType, member.InjectName, false, null));
             }
+
+            foreach (var method in info.Methods)
+            {
+                InjectMethod(method, instance);
+            }
         }
 
         public T Resolve<T>(string identifier = null, bool requireInstance = false, object[] args = null) where T : class
@@ -164,27 +169,27 @@ namespace Mirzipan.Infusion
 
         #region Bind / Unbind
 
-        public void Bind(object instance, string identifier = null)
+        public void BindInstance(object instance, string identifier = null)
         {
-            Bind(instance.GetType(), instance, identifier);
+            BindInstance(instance.GetType(), instance, identifier);
         }
         
-        public void Bind<T>(T instance)
+        public void BindInstance<T>(T instance)
         {
-            Bind(instance, null, true);
+            BindInstance(instance, null, true);
         }
 
-        public void Bind<T>(T instance, bool injectNow)
+        public void BindInstance<T>(T instance, bool injectNow)
         {
-            Bind(instance, null, injectNow);
+            BindInstance(instance, null, injectNow);
         }
 
-        public void Bind<T>(T instance, string identifier, bool injectNow = true)
+        public void BindInstance<T>(T instance, string identifier, bool injectNow = true)
         {
-            Bind(typeof(T), instance, identifier, injectNow);
+            BindInstance(typeof(T), instance, identifier, injectNow);
         }
 
-        public void Bind(Type baseType, object instance, string identifier = null, bool injectNow = true)
+        public void BindInstance(Type baseType, object instance, string identifier = null, bool injectNow = true)
         {
             var resolver = new InstanceResolver(instance);
             _disposer.Add(resolver);
@@ -195,29 +200,36 @@ namespace Mirzipan.Infusion
                 Inject(instance);
             }
         }
-
-        public void Bind<TBase, TConcrete>(string identifier = null) where TConcrete : TBase
+        
+        public void BindLazy<T>(string identifier = null)
         {
-            Bind(typeof(TBase), typeof(TConcrete), identifier);
+            BindLazy(typeof(T), identifier);
         }
 
-        public void Bind(Type baseType, Type concreteType, string identifier = null)
+        public void BindLazy(Type type, string identifier = null)
         {
-            var resolver = new MappedResolver(concreteType);
+            var resolver = new LazyInstanceResolver(type);
+            _disposer.Add(resolver);
+            _resolvers[type, identifier] = resolver;
+        }
+
+        public void BindFactory<TBase, TConcrete>(string identifier = null) where TConcrete : TBase
+        {
+            BindFactory(typeof(TBase), typeof(TConcrete), identifier);
+        }
+
+        public void BindFactory(Type baseType, Type concreteType, string identifier = null)
+        {
+            var resolver = new FactoryResolver(concreteType);
             _disposer.Add(resolver);
             _resolvers[baseType, identifier] = resolver;
         }
 
-        public void Bind<T>(Func<T> factory, string identifier = null)
+        public void BindFunction<T>(Func<T> factory, string identifier = null)
         {
-            Bind(typeof(T), factory, identifier);
-        }
-
-        public void Bind(Type baseType, Func<object> factory, string identifier = null)
-        {
-            var resolver = new FactoryResolver(factory);
+            var resolver = new FunctionResolver(factory as Func<object>);
             _disposer.Add(resolver);
-            _resolvers[baseType, identifier] = resolver;
+            _resolvers[typeof(T), identifier] = resolver;
         }
 
         public void Unbind<T>(string identifier = null)
@@ -246,8 +258,8 @@ namespace Mirzipan.Infusion
 
         private void InjectSelf()
         {
-            Bind(this);
-            Bind<IInjectionContainer>(this);
+            BindInstance(this);
+            BindInstance<IInjectionContainer>(this);
         }
         
         private static TypeInjectionInfo GetTypeInfo(Type type)
@@ -269,6 +281,25 @@ namespace Mirzipan.Infusion
             var result = Activator.CreateInstance(type, constructorArgs);
             Inject(result);
             return result;
+        }
+
+        private void InjectMethod(InjectableMethodInfo method, object instance)
+        {
+            int count = method.Parameters.Length;
+            var args = new object[count];
+            for (int i = 0; i < count; i++)
+            {
+                var parameter = method.Parameters[i];
+                if (parameter.Type.IsArray)
+                {
+                    args[i] = ResolveAll(parameter.Type);
+                    continue;
+                }
+
+                args[i] = Resolve(parameter.Type) ?? Resolve(parameter.Type, parameter.Name);
+            }
+
+            method.Invoke(instance, args);
         }
 
         #endregion Private

@@ -27,10 +27,10 @@ namespace Mirzipan.Infusion.Extensions
             var interfaces = baseType.GetInterfaces();
             foreach (var entry in interfaces)
             {
-                @this.Bind(entry, instance, identifier);
+                @this.BindInstance(entry, instance, identifier);
             }
 
-            @this.Bind(baseType, instance, identifier, injectNow);
+            @this.BindInstance(baseType, instance, identifier, injectNow);
         }
     }
 }
